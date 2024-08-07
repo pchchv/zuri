@@ -7,6 +7,12 @@ pub const Host = union(enum) {
     name: []const u8,
 };
 
+/// EncodeError - possible errors during decoding and encoding
+pub const EncodeError = error{
+    InvalidCharacter,
+    OutOfMemory,
+};
+
 pub const Uri = struct {
     len: usize,
     host: Host,
