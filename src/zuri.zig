@@ -3,6 +3,7 @@ const net = std.net;
 const mem = std.mem;
 const assert = std.debug.assert;
 const Allocator = std.mem.Allocator;
+const parseUnsigned = std.fmt.parseUnsigned;
 
 const ValueMap = std.StringHashMap([]const u8);
 
@@ -243,5 +244,36 @@ pub const Uri = struct {
         }
 
         return uri;
+    }
+
+    fn parseAuth(u: *Uri, input: []const u8) Error!void {
+        var i: u32 = 0;
+        var at_index = i;
+        while (i < input.len) : (i += 1) {
+            switch (input[i]) {
+                '@' => at_index = i,
+                '[' => {
+                    if (i != 0) return error.InvalidCharacter;
+                    return u.parseIP6(input);
+                },
+                else => if (!isPchar(input[i..])) break,
+            }
+        }
+
+        if (at_index != 0) {
+            u.username = input[0..at_index];
+            if (mem.indexOfScalar(u8, u.username, ':')) |colon| {
+                u.password = u.username[colon + 1 ..];
+                u.username = u.username[0..colon];
+            }
+            at_index += 1;
+        }
+
+        u.host.name = input[at_index..i];
+        u.len += i;
+        if (mem.indexOfScalar(u8, u.host.name, ':')) |colon| {
+            u.port = parseUnsigned(u16, u.host.name[colon + 1 ..], 10) catch return error.InvalidCharacter;
+            u.host.name = u.host.name[0..colon];
+        }
     }
 };
