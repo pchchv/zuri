@@ -116,4 +116,30 @@ pub const Uri = struct {
         if (ret) |some| return try allocator.realloc(some, ret_index);
         return null;
     }
+
+    /// encode implements percentage encoding if the path contains characters not allowed in paths.
+    pub fn encode(allocator: Allocator, path: []const u8) EncodeError!?[]u8 {
+        var ret: ?[]u8 = null;
+        var ret_index: usize = 0;
+        for (path, 0..) |c, i| {
+            if (c != '/' and !isPchar(path[i..])) {
+                if (ret == null) {
+                    ret = try allocator.alloc(u8, path.len * 3);
+                    mem.copy(u8, ret.?, path[0..i]);
+                    ret_index = i;
+                }
+                const hex_digits = "0123456789ABCDEF";
+                ret.?[ret_index] = '%';
+                ret.?[ret_index + 1] = hex_digits[(c & 0xF0) >> 4];
+                ret.?[ret_index + 2] = hex_digits[c & 0x0F];
+                ret_index += 3;
+            } else if (ret != null) {
+                ret.?[ret_index] = c;
+                ret_index += 1;
+            }
+        }
+
+        if (ret) |some| return try allocator.realloc(some, ret_index);
+        return null;
+    }
 };
