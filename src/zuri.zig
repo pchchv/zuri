@@ -142,4 +142,40 @@ pub const Uri = struct {
         if (ret) |some| return try allocator.realloc(some, ret_index);
         return null;
     }
+
+    /// resolvePath resolves `path` leaving a '/' at the end, assumes `path` is valid.
+    pub fn resolvePath(allocator: Allocator, path: []const u8) error{OutOfMemory}![]u8 {
+        assert(path.len > 0);
+        var list = std.ArrayList([]const u8).init(allocator);
+        defer list.deinit();
+
+        var it = mem.tokenize(u8, path, "/");
+        while (it.next()) |p| {
+            if (mem.eql(u8, p, ".")) {
+                continue;
+            } else if (mem.eql(u8, p, "..")) {
+                _ = list.popOrNull();
+            } else {
+                try list.append(p);
+            }
+        }
+
+        var buf = try allocator.alloc(u8, path.len);
+        errdefer allocator.free(buf);
+        var len: usize = 0;
+
+        for (list.items) |s| {
+            buf[len] = '/';
+            len += 1;
+            mem.copy(u8, buf[len..], s);
+            len += s.len;
+        }
+
+        if (path[path.len - 1] == '/') {
+            buf[len] = '/';
+            len += 1;
+        }
+
+        return allocator.realloc(buf, len);
+    }
 };
