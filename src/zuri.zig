@@ -7,6 +7,49 @@ const parseUnsigned = std.fmt.parseUnsigned;
 
 const ValueMap = std.StringHashMap([]const u8);
 
+pub const scheme_to_port = std.ComptimeStringMap(u16, .{
+    .{ "acap", 674 },
+    .{ "afp", 548 },
+    .{ "dict", 2628 },
+    .{ "dns", 53 },
+    .{ "ftp", 21 },
+    .{ "git", 9418 },
+    .{ "gopher", 70 },
+    .{ "http", 80 },
+    .{ "https", 443 },
+    .{ "imap", 143 },
+    .{ "ipp", 631 },
+    .{ "ipps", 631 },
+    .{ "irc", 194 },
+    .{ "ircs", 6697 },
+    .{ "ldap", 389 },
+    .{ "ldaps", 636 },
+    .{ "mms", 1755 },
+    .{ "msrp", 2855 },
+    .{ "mtqp", 1038 },
+    .{ "nfs", 111 },
+    .{ "nntp", 119 },
+    .{ "nntps", 563 },
+    .{ "pop", 110 },
+    .{ "prospero", 1525 },
+    .{ "redis", 6379 },
+    .{ "rsync", 873 },
+    .{ "rtsp", 554 },
+    .{ "rtsps", 322 },
+    .{ "rtspu", 5005 },
+    .{ "sftp", 22 },
+    .{ "smb", 445 },
+    .{ "snmp", 161 },
+    .{ "ssh", 22 },
+    .{ "svn", 3690 },
+    .{ "telnet", 23 },
+    .{ "ventrilo", 3784 },
+    .{ "vnc", 5900 },
+    .{ "wais", 210 },
+    .{ "ws", 80 },
+    .{ "wss", 443 },
+});
+
 /// Host - possible uri host values
 pub const Host = union(enum) {
     ip: net.Address,
@@ -274,6 +317,38 @@ pub const Uri = struct {
         if (mem.indexOfScalar(u8, u.host.name, ':')) |colon| {
             u.port = parseUnsigned(u16, u.host.name[colon + 1 ..], 10) catch return error.InvalidCharacter;
             u.host.name = u.host.name[0..colon];
+        }
+    }
+
+    fn parseMaybeScheme(u: *Uri, input: []const u8) void {
+        for (input, 0..) |c, i| {
+            switch (c) {
+                'a'...'z', 'A'...'Z', '0'...'9', '+', '-', '.' => {
+                    // allowed characters
+                },
+                ':' => {
+                    u.scheme = input[0..i];
+                    u.port = scheme_to_port.get(u.scheme);
+                    u.len += u.scheme.len + 1; // +1 for the ':'
+                    return;
+                },
+                else => {
+                    // not a valid scheme
+                    return;
+                },
+            }
+        }
+    }
+
+    fn parseIP6(u: *Uri, input: []const u8) Error!void {
+        const end = mem.indexOfScalar(u8, input, ']') orelse return error.InvalidCharacter;
+        const addr = net.Address.parseIp6(input[1..end], 0) catch return error.InvalidCharacter;
+        u.host = .{ .ip = addr };
+        u.len += end + 1;
+
+        if (input.len > end + 2 and input[end + 1] == ':') {
+            u.len += 1;
+            try u.parsePort(input[end + 2 ..]);
         }
     }
 };
