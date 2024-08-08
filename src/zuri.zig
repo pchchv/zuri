@@ -187,4 +187,61 @@ pub const Uri = struct {
 
         return allocator.realloc(buf, len);
     }
+
+    /// parse parses the URI from input.
+    /// Empty input data is an error,
+    /// if assume_auth is true then `example.com` will cause `example.com` to be the host and not the path.
+    pub fn parse(input: []const u8, assume_auth: bool) Error!Uri {
+        if (input.len == 0) {
+            return error.EmptyUri;
+        }
+
+        var uri = Uri{
+            .scheme = "",
+            .username = "",
+            .password = "",
+            .host = .{ .name = "" },
+            .port = null,
+            .path = "",
+            .query = "",
+            .fragment = "",
+            .len = 0,
+        };
+
+        switch (input[0]) {
+            'a'...'z', 'A'...'Z' => {
+                uri.parseMaybeScheme(input);
+            },
+            else => {},
+        }
+
+        if (input.len > uri.len + 2 and input[uri.len] == '/' and input[uri.len + 1] == '/') {
+            uri.len += 2; // for the '//'
+            try uri.parseAuth(input[uri.len..]);
+        } else if (assume_auth) {
+            try uri.parseAuth(input[uri.len..]);
+        }
+
+        // make host ip4 address if possible
+        if (uri.host == .name and uri.host.name.len > 0) blk: {
+            const a = net.Address.parseIp4(uri.host.name, 0) catch break :blk;
+            uri.host = .{ .ip = a };
+        }
+
+        if (uri.host == .ip and uri.port != null) {
+            uri.host.ip.setPort(uri.port.?);
+        }
+
+        uri.parsePath(input[uri.len..]);
+
+        if (input.len > uri.len + 1 and input[uri.len] == '?') {
+            uri.parseQuery(input[uri.len + 1 ..]);
+        }
+
+        if (input.len > uri.len + 1 and input[uri.len] == '#') {
+            uri.parseFragment(input[uri.len + 1 ..]);
+        }
+
+        return uri;
+    }
 };
