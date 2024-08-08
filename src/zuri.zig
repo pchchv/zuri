@@ -12,10 +12,19 @@ pub const Host = union(enum) {
     name: []const u8,
 };
 
-/// EncodeError - possible errors during decoding and encoding
+/// EncodeError - possible errors during decoding and encoding.
 pub const EncodeError = error{
     InvalidCharacter,
     OutOfMemory,
+};
+
+/// Error - possible errors for parse.
+pub const Error = error{
+    /// input is not a valid uri due to a invalid character
+    /// mostly a result of invalid ipv6
+    InvalidCharacter,
+    /// given input was empty
+    EmptyUri,
 };
 
 pub const Uri = struct {
