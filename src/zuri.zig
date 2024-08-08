@@ -389,4 +389,17 @@ pub const Uri = struct {
         u.query = input;
         u.len += input.len;
     }
+
+    fn parseFragment(u: *Uri, input: []const u8) void {
+        u.len += 1;
+        for (input, 0..) |c, i| {
+            if (c != '/' and c != '?' and !isPchar(input[i..])) {
+                u.fragment = input[0..i];
+                u.len += u.fragment.len;
+                return;
+            }
+        }
+        u.fragment = input;
+        u.len += u.fragment.len;
+    }
 };
