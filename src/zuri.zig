@@ -351,4 +351,29 @@ pub const Uri = struct {
             try u.parsePort(input[end + 2 ..]);
         }
     }
+
+    fn parsePort(u: *Uri, input: []const u8) Error!void {
+        var i: u32 = 0;
+        while (i < input.len) : (i += 1) {
+            switch (input[i]) {
+                '0'...'9' => {}, // digits
+                else => break,
+            }
+        }
+        if (i == 0) return error.InvalidCharacter;
+        u.port = parseUnsigned(u16, input[0..i], 10) catch return error.InvalidCharacter;
+        u.len += i;
+    }
+
+    fn parsePath(u: *Uri, input: []const u8) void {
+        for (input, 0..) |c, i| {
+            if (c != '/' and (c == '?' or c == '#' or !isPchar(input[i..]))) {
+                u.path = input[0..i];
+                u.len += u.path.len;
+                return;
+            }
+        }
+        u.path = input[0..];
+        u.len += u.path.len;
+    }
 };
