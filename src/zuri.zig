@@ -376,4 +376,17 @@ pub const Uri = struct {
         u.path = input[0..];
         u.len += u.path.len;
     }
+
+    fn parseQuery(u: *Uri, input: []const u8) void {
+        u.len += 1;
+        for (input, 0..) |c, i| {
+            if (c == '#' or (c != '/' and c != '?' and !isPchar(input[i..]))) {
+                u.query = input[0..i];
+                u.len += u.query.len;
+                return;
+            }
+        }
+        u.query = input;
+        u.len += input.len;
+    }
 };
