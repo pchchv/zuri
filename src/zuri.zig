@@ -1,5 +1,6 @@
 const std = @import("std");
 const net = std.net;
+const assert = std.debug.assert;
 const Allocator = std.mem.Allocator;
 
 const ValueMap = std.StringHashMap([]const u8);
@@ -59,5 +60,23 @@ pub const Uri = struct {
         }
 
         return map;
+    }
+
+    /// isPchar returns true if str starts with a valid path or octet character encoded in percentages.
+    pub fn isPchar(str: []const u8) bool {
+        assert(str.len > 0);
+        return switch (str[0]) {
+            'a'...'z', 'A'...'Z', '0'...'9', '-', '.', '_', '~', '!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '=', ':', '@' => true,
+            '%' => str.len > 3 and isHex(str[1]) and isHex(str[2]),
+            else => false,
+        };
+    }
+
+    /// isHex returns true if c is a hexadecimal digit.
+    pub fn isHex(c: u8) bool {
+        return switch (c) {
+            '0'...'9', 'a'...'f', 'A'...'F' => true,
+            else => false,
+        };
     }
 };
