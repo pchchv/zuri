@@ -1,5 +1,6 @@
 const std = @import("std");
 const net = std.net;
+const mem = std.mem;
 const assert = std.debug.assert;
 const Allocator = std.mem.Allocator;
 
@@ -78,5 +79,41 @@ pub const Uri = struct {
             '0'...'9', 'a'...'f', 'A'...'F' => true,
             else => false,
         };
+    }
+
+    /// decode decodes the path if it is percentage encoded
+    pub fn decode(allocator: Allocator, path: []const u8) EncodeError!?[]u8 {
+        var ret: ?[]u8 = null;
+        errdefer if (ret) |some| allocator.free(some);
+        var ret_index: usize = 0;
+        var i: usize = 0;
+
+        while (i < path.len) : (i += 1) {
+            if (path[i] == '%') {
+                if (!isPchar(path[i..])) {
+                    return error.InvalidCharacter;
+                }
+                if (ret == null) {
+                    ret = try allocator.alloc(u8, path.len);
+                    mem.copy(u8, ret.?, path[0..i]);
+                    ret_index = i;
+                }
+
+                // charToDigit cannot fail because the characters are checked earlier.
+                var new = (std.fmt.charToDigit(path[i + 1], 16) catch unreachable) << 4;
+                new |= std.fmt.charToDigit(path[i + 2], 16) catch unreachable;
+                ret.?[ret_index] = new;
+                ret_index += 1;
+                i += 2;
+            } else if (path[i] != '/' and !isPchar(path[i..])) {
+                return error.InvalidCharacter;
+            } else if (ret != null) {
+                ret.?[ret_index] = path[i];
+                ret_index += 1;
+            }
+        }
+
+        if (ret) |some| return try allocator.realloc(some, ret_index);
+        return null;
     }
 };
