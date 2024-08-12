@@ -45,3 +45,19 @@ test "single char" {
     try expectEqualStrings("", uri.fragment);
     try expect(uri.len == 1);
 }
+
+test "ipv6" {
+    const uri = try Uri.parse("ldap://[2001:db8::7]/c=GB?objectClass?one", false);
+    try expectEqualStrings("ldap", uri.scheme);
+    try expectEqualStrings("", uri.username);
+    try expectEqualStrings("", uri.password);
+
+    var buf = [_]u8{0} ** 100;
+    const ip = std.fmt.bufPrint(buf[0..], "{}", .{uri.host.ip}) catch unreachable;
+    try expectEqualStrings("[2001:db8::7]:389", ip);
+    try expect(uri.port.? == 389);
+    try expectEqualStrings("/c=GB", uri.path);
+    try expectEqualStrings("objectClass?one", uri.query);
+    try expectEqualStrings("", uri.fragment);
+    try expect(uri.len == 41);
+}
