@@ -161,3 +161,15 @@ test "username contains @" {
     try expectEqualStrings("", uri.path);
     try expect(uri.len == 35);
 }
+
+test "encode" {
+    const path = (try Uri.encode(testing.allocator, "/안녕하세요.html")).?;
+    defer testing.allocator.free(path);
+    try expectEqualStrings("/%EC%95%88%EB%85%95%ED%95%98%EC%84%B8%EC%9A%94.html", path);
+}
+
+test "decode" {
+    const path = (try Uri.decode(testing.allocator, "/%EC%95%88%EB%85%95%ED%95%98%EC%84%B8%EC%9A%94.html")).?;
+    defer testing.allocator.free(path);
+    try expectEqualStrings("/안녕하세요.html", path);
+}
