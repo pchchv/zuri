@@ -61,3 +61,16 @@ test "ipv6" {
     try expectEqualStrings("", uri.fragment);
     try expect(uri.len == 41);
 }
+
+test "mailto" {
+    const uri = try Uri.parse("mailto:John.Doe@example.com", false);
+    try expectEqualStrings("mailto", uri.scheme);
+    try expectEqualStrings("", uri.username);
+    try expectEqualStrings("", uri.password);
+    try expectEqualStrings("", uri.host.name);
+    try expect(uri.port == null);
+    try expectEqualStrings("John.Doe@example.com", uri.path);
+    try expectEqualStrings("", uri.query);
+    try expectEqualStrings("", uri.fragment);
+    try expect(uri.len == 27);
+}
