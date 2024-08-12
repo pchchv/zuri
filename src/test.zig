@@ -141,3 +141,9 @@ test "ends in space" {
     try expectEqualStrings("/documentation/master/", uri.path);
     try expect(uri.len == 41);
 }
+
+test "assume auth" {
+    const uri = try Uri.parse("ziglang.org", true);
+    try expectEqualStrings("ziglang.org", uri.host.name);
+    try expect(uri.len == 11);
+}
