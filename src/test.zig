@@ -1,5 +1,5 @@
 const std = @import("std");
-const Uri = @import("zuri.zig");
+const Uri = @import("zuri.zig").Uri;
 const testing = std.testing;
 const expect = testing.expect;
 const expectEqualStrings = testing.expectEqualStrings;
