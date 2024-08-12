@@ -113,3 +113,21 @@ test "userinfo" {
     try expectEqualStrings("", uri.fragment);
     try expect(uri.len == 33);
 }
+
+test "map query" {
+    const uri = try Uri.parse("https://ziglang.org:80/documentation/master/?test;1=true&false#toc-Introduction", false);
+    try expectEqualStrings("https", uri.scheme);
+    try expectEqualStrings("", uri.username);
+    try expectEqualStrings("", uri.password);
+    try expectEqualStrings("ziglang.org", uri.host.name);
+    try expect(uri.port.? == 80);
+    try expectEqualStrings("/documentation/master/", uri.path);
+    try expectEqualStrings("test;1=true&false", uri.query);
+    try expectEqualStrings("toc-Introduction", uri.fragment);
+
+    var map = try Uri.mapQuery(std.testing.allocator, uri.query);
+    defer map.deinit();
+
+    try expectEqualStrings("true", map.get("test;1").?);
+    try expectEqualStrings("", map.get("false").?);
+}
