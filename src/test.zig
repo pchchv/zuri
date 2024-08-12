@@ -16,3 +16,19 @@ test "basic url" {
     try expectEqualStrings("toc-Introduction", uri.fragment);
     try expect(uri.len == 66);
 }
+
+test "short" {
+    const uri = try Uri.parse("telnet://192.0.2.16:80/", false);
+    try expectEqualStrings("telnet", uri.scheme);
+    try expectEqualStrings("", uri.username);
+    try expectEqualStrings("", uri.password);
+
+    var buf = [_]u8{0} ** 100;
+    const ip = std.fmt.bufPrint(buf[0..], "{}", .{uri.host.ip}) catch unreachable;
+    try expectEqualStrings("192.0.2.16:80", ip);
+    try expect(uri.port.? == 80);
+    try expectEqualStrings("/", uri.path);
+    try expectEqualStrings("", uri.query);
+    try expectEqualStrings("", uri.fragment);
+    try expect(uri.len == 23);
+}
