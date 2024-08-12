@@ -100,3 +100,16 @@ test "urn" {
     try expectEqualStrings("", uri.fragment);
     try expect(uri.len == 51);
 }
+
+test "userinfo" {
+    const uri = try Uri.parse("ftp://username:password@host.com/", false);
+    try expectEqualStrings("ftp", uri.scheme);
+    try expectEqualStrings("username", uri.username);
+    try expectEqualStrings("password", uri.password);
+    try expectEqualStrings("host.com", uri.host.name);
+    try expect(uri.port.? == 21);
+    try expectEqualStrings("/", uri.path);
+    try expectEqualStrings("", uri.query);
+    try expectEqualStrings("", uri.fragment);
+    try expect(uri.len == 33);
+}
