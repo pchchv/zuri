@@ -173,3 +173,24 @@ test "decode" {
     defer testing.allocator.free(path);
     try expectEqualStrings("/안녕하세요.html", path);
 }
+
+test "resolvePath" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const alloc = arena.allocator();
+
+    var a = try Uri.resolvePath(alloc, "/a/b/..");
+    try expectEqualStrings("/a", a);
+    a = try Uri.resolvePath(alloc, "/a/b/../");
+    try expectEqualStrings("/a/", a);
+    a = try Uri.resolvePath(alloc, "/a/b/c/../d/../");
+    try expectEqualStrings("/a/b/", a);
+    a = try Uri.resolvePath(alloc, "/a/b/c/../d/..");
+    try expectEqualStrings("/a/b", a);
+    a = try Uri.resolvePath(alloc, "/a/b/c/../d/.././");
+    try expectEqualStrings("/a/b/", a);
+    a = try Uri.resolvePath(alloc, "/a/b/c/../d/../.");
+    try expectEqualStrings("/a/b", a);
+    a = try Uri.resolvePath(alloc, "/a/../../");
+    try expectEqualStrings("/", a);
+}
