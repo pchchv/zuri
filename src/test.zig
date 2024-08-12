@@ -147,3 +147,17 @@ test "assume auth" {
     try expectEqualStrings("ziglang.org", uri.host.name);
     try expect(uri.len == 11);
 }
+
+test "username contains @" {
+    const uri = try Uri.parse("https://1.1.1.1&@2.2.2.2%23@3.3.3.3", false);
+    try expectEqualStrings("https", uri.scheme);
+    try expectEqualStrings("1.1.1.1&@2.2.2.2%23", uri.username);
+    try expectEqualStrings("", uri.password);
+
+    var buf = [_]u8{0} ** 100;
+    const ip = std.fmt.bufPrint(buf[0..], "{}", .{uri.host.ip}) catch unreachable;
+    try expectEqualStrings("3.3.3.3:443", ip);
+    try expect(uri.port.? == 443);
+    try expectEqualStrings("", uri.path);
+    try expect(uri.len == 35);
+}
