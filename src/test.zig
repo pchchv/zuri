@@ -32,3 +32,16 @@ test "short" {
     try expectEqualStrings("", uri.fragment);
     try expect(uri.len == 23);
 }
+
+test "single char" {
+    const uri = try Uri.parse("a", false);
+    try expectEqualStrings("", uri.scheme);
+    try expectEqualStrings("", uri.username);
+    try expectEqualStrings("", uri.password);
+    try expectEqualStrings("", uri.host.name);
+    try expect(uri.port == null);
+    try expectEqualStrings("a", uri.path);
+    try expectEqualStrings("", uri.query);
+    try expectEqualStrings("", uri.fragment);
+    try expect(uri.len == 1);
+}
