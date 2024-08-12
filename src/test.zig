@@ -87,3 +87,16 @@ test "tel" {
     try expectEqualStrings("", uri.fragment);
     try expect(uri.len == 19);
 }
+
+test "urn" {
+    const uri = try Uri.parse("urn:oasis:names:specification:docbook:dtd:xml:4.1.2", false);
+    try expectEqualStrings("urn", uri.scheme);
+    try expectEqualStrings("", uri.username);
+    try expectEqualStrings("", uri.password);
+    try expectEqualStrings("", uri.host.name);
+    try expect(uri.port == null);
+    try expectEqualStrings("oasis:names:specification:docbook:dtd:xml:4.1.2", uri.path);
+    try expectEqualStrings("", uri.query);
+    try expectEqualStrings("", uri.fragment);
+    try expect(uri.len == 51);
+}
