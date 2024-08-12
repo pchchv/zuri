@@ -74,3 +74,16 @@ test "mailto" {
     try expectEqualStrings("", uri.fragment);
     try expect(uri.len == 27);
 }
+
+test "tel" {
+    const uri = try Uri.parse("tel:+1-816-555-1212", false);
+    try expectEqualStrings("tel", uri.scheme);
+    try expectEqualStrings("", uri.username);
+    try expectEqualStrings("", uri.password);
+    try expectEqualStrings("", uri.host.name);
+    try expect(uri.port == null);
+    try expectEqualStrings("+1-816-555-1212", uri.path);
+    try expectEqualStrings("", uri.query);
+    try expectEqualStrings("", uri.fragment);
+    try expect(uri.len == 19);
+}
