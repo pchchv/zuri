@@ -131,3 +131,13 @@ test "map query" {
     try expectEqualStrings("true", map.get("test;1").?);
     try expectEqualStrings("", map.get("false").?);
 }
+
+test "ends in space" {
+    const uri = try Uri.parse("https://ziglang.org/documentation/master/ something else", false);
+    try expectEqualStrings("https", uri.scheme);
+    try expectEqualStrings("", uri.username);
+    try expectEqualStrings("", uri.password);
+    try expectEqualStrings("ziglang.org", uri.host.name);
+    try expectEqualStrings("/documentation/master/", uri.path);
+    try expect(uri.len == 41);
+}
